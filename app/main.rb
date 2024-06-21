@@ -96,13 +96,13 @@ class Game
     outputs.background_color = [0, 0, 0]
 
     # Render player
-    outputs.solids << [state.player.x, state.player.y, state.player.w, state.player.h, 255, 255, 255]
+    outputs.sprites << [state.player.x, state.player.y, state.player.w, state.player.h, 'sprites/triangle/equilateral/orange.png']
 
     # Render bullets
     outputs.solids << state.bullets.map { |b| [b.x, b.y, b.w, b.h, 255, 255, 0] }
 
     # Render enemies
-    outputs.solids << state.enemies.map { |e| [e.x, e.y, e.w, e.h, 255, 0, 0] }
+    outputs.sprites << state.enemies.map { |e| [e.x, e.y, e.w, e.h, 'sprites/circle/red.png', -90] }
 
     # Render explosions
     outputs.sprites << state.explosions.map do |e|
