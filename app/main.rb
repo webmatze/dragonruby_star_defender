@@ -19,6 +19,7 @@ class Game
     state.score ||= 0
     state.enemy_spawn_timer ||= 60
     state.player_hit_cooldown ||= 0  # Add cooldown to prevent multiple hits at once
+    state.explosions ||= []  # Add explosions array
   end
 
   def input
@@ -53,10 +54,22 @@ class Game
       state.enemies.reject! do |enemy|
         if bullet.intersect_rect?(enemy)
           state.score += 1
+          # Create explosion
+          state.explosions << { x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h / 2, width: 10, height: 10, opacity: 255, age: 0 }
           true
         end
       end
     end
+
+    # Update explosions
+    state.explosions.each do |explosion|
+      explosion.width += 15
+      explosion.height += 15
+      explosion.opacity -= 15
+      explosion.y += 5
+      explosion.age += 1.5
+    end
+    state.explosions.reject! { |explosion| explosion.age > 25 }
 
     # Check player-enemy collisions
     if state.player_hit_cooldown <= 0
@@ -91,9 +104,14 @@ class Game
     # Render enemies
     outputs.solids << state.enemies.map { |e| [e.x, e.y, e.w, e.h, 255, 0, 0] }
 
+    # Render explosions
+    outputs.sprites << state.explosions.map do |e|
+      [e.x - e.width / 2, e.y - e.height / 2, e.width, e.height, 'sprites/misc/explosion-3.png', 0, e.opacity, 255, 128, 0]
+    end
+
     # Render UI
     outputs.labels << [1220, 710, "Score: #{state.score}", 1, 1, 255, 255, 255]  # Adjusted position for upper right corner
-    outputs.labels << [10, 680, "Wave: #{state.wave}"]
+    outputs.labels << [1220, 680, "Wave: #{state.wave}", 1, 1, 255, 255, 255]
   end
 end
 
