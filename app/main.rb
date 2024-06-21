@@ -18,13 +18,14 @@ class Game
     state.wave ||= 1
     state.score ||= 0
     state.enemy_spawn_timer ||= 60
+    state.player_hit_cooldown ||= 0  # Add cooldown to prevent multiple hits at once
   end
 
   def input
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
-    
+
     # Shooting
     if inputs.keyboard.key_down.space
       state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10 }
@@ -57,6 +58,20 @@ class Game
       end
     end
 
+    # Check player-enemy collisions
+    if state.player_hit_cooldown <= 0
+      state.enemies.each do |enemy|
+        if state.player.intersect_rect?(enemy)
+          state.score -= 10
+          state.score = 0 if state.score < 0  # Prevent negative score
+          state.player_hit_cooldown = 60  # Set cooldown to 1 second (60 frames)
+          break
+        end
+      end
+    else
+      state.player_hit_cooldown -= 1
+    end
+
     # Increase difficulty
     if state.score > state.wave * 10
       state.wave += 1
@@ -77,7 +92,7 @@ class Game
     outputs.solids << state.enemies.map { |e| [e.x, e.y, e.w, e.h, 255, 0, 0] }
 
     # Render UI
-    outputs.labels << [10, 710, "Score: #{state.score}"]
+    outputs.labels << [1220, 710, "Score: #{state.score}", 1, 1, 255, 255, 255]  # Adjusted position for upper right corner
     outputs.labels << [10, 680, "Wave: #{state.wave}"]
   end
 end
@@ -88,4 +103,3 @@ def tick args
   $game.args = args
   $game.tick
 end
-
