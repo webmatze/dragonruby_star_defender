@@ -23,6 +23,7 @@ class Game
     state.screen_width ||= 1280
     state.screen_height ||= 720
     state.enemy_types ||= initialize_enemy_types
+    initialize_starfield
   end
 
   def input
@@ -50,10 +51,13 @@ class Game
     update_explosions
     check_player_enemy_collisions
     increase_difficulty
+    update_starfield
   end
 
   def render
-    clear_screen
+    # Set background to black
+    outputs.solids << [0, 0, state.screen_width, state.screen_height, 0, 0, 0]
+    render_starfield
     render_player
     render_bullets
     render_enemies
@@ -125,8 +129,37 @@ class Game
     end
   end
 
-  def clear_screen
-    outputs.background_color = [0, 0, 0]
+  def initialize_starfield
+    state.starfield_layers ||= 4
+    state.starfield ||= state.starfield_layers.times.map do |layer|
+      100.times.map do
+        {
+          x: rand(state.screen_width),
+          y: rand(state.screen_height),
+          speed: (layer + 1) * 0.5,
+          size: (layer + 1) * 2,
+          alpha: 255 / (state.starfield_layers - layer)
+        }
+      end
+    end
+  end
+
+  def update_starfield
+    state.starfield.each_with_index do |layer, layer_index|
+      layer.each do |star|
+        star.y -= star.speed
+        if star.y < 0
+          star.y = state.screen_height
+          star.x = rand(state.screen_width)
+        end
+      end
+    end
+  end
+
+  def render_starfield
+    outputs.sprites << state.starfield.flatten.map do |star|
+      [star.x, star.y, star[:size], star[:size], 'sprites/circle/white.png', 0, star.alpha]
+    end
   end
 
   def render_player
