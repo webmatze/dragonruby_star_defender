@@ -29,6 +29,12 @@ class Game
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
+    state.player.y -= state.player.speed if inputs.keyboard.key_held.down
+    state.player.y += state.player.speed if inputs.keyboard.key_held.up
+
+    # Keep player within screen bounds
+    state.player.x = state.player.x.clamp(0, state.screen_width - state.player.w)
+    state.player.y = state.player.y.clamp(0, state.screen_height - state.player.h)
 
     # Shooting
     if inputs.keyboard.key_down.space
