@@ -23,10 +23,12 @@ class Game
     state.screen_width ||= 1280
     state.screen_height ||= 720
     state.enemy_types ||= initialize_enemy_types
+    state.game_over ||= false
     initialize_starfield
   end
 
   def input
+    return if state.game_over
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
@@ -44,6 +46,7 @@ class Game
   end
 
   def calc
+    return if state.game_over
     move_bullets
     move_enemies
     spawn_enemies
@@ -52,18 +55,23 @@ class Game
     check_player_enemy_collisions
     increase_difficulty
     update_starfield
+    check_game_over
   end
 
   def render
     # Set background to black
     outputs.solids << [0, 0, state.screen_width, state.screen_height, 0, 0, 0]
     render_starfield
-    render_player
-    render_bullets
-    render_enemies
-    render_explosions
-    render_ui
-    render_player_health
+    unless state.game_over
+      render_player
+      render_bullets
+      render_enemies
+      render_explosions
+      render_ui
+      render_player_health
+    else
+      render_game_over
+    end
   end
 
   def move_bullets
@@ -144,6 +152,13 @@ class Game
     end
   end
 
+  def check_game_over
+    if state.player.health <= 0
+      state.game_over = true
+      state.enemies.clear
+    end
+  end
+
   def update_starfield
     state.starfield.each_with_index do |layer, layer_index|
       layer.each do |star|
@@ -154,6 +169,10 @@ class Game
         end
       end
     end
+  end
+
+  def render_game_over
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2, "You lose!", 5, 1, 255, 0, 0]
   end
 
   def render_starfield
