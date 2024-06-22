@@ -98,7 +98,6 @@ class Game
     state.explosions.each do |explosion|
       explosion.width += 15
       explosion.height += 15
-      explosion.opacity -= 15
       explosion.y += 5
       explosion.age += 1.5
     end
@@ -144,7 +143,19 @@ class Game
 
   def render_explosions
     outputs.sprites << state.explosions.map do |e|
-      [e.x - e.width / 2, e.y - e.height / 2, e.width, e.height, 'sprites/misc/explosion-3.png', 0, e.opacity, 255, 128, 0]
+      frame = (e.age / 4).to_i % 7  # Cycle through 7 frames (0-6)
+      [
+        e.x - e.width / 2,
+        e.y - e.height / 2,
+        e.width,
+        e.height,
+        "sprites/misc/explosion-#{frame}.png",
+        0,
+        e.opacity,
+        255,
+        128,
+        0
+      ]
     end
   end
 
