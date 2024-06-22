@@ -20,6 +20,8 @@ class Game
     state.enemy_spawn_timer ||= 60
     state.player_hit_cooldown ||= 0  # Add cooldown to prevent multiple hits at once
     state.explosions ||= []  # Add explosions array
+    state.screen_width ||= 1280
+    state.screen_height ||= 720
   end
 
   def input
@@ -36,7 +38,7 @@ class Game
   def calc
     # Move bullets
     state.bullets.each { |bullet| bullet.y += bullet.speed }
-    state.bullets.reject! { |bullet| bullet.y > 720 }
+    state.bullets.reject! { |bullet| bullet.y > state.screen_height }
 
     # Move enemies
     state.enemies.each { |enemy| enemy.y -= enemy.speed }
@@ -45,7 +47,7 @@ class Game
     # Spawn enemies
     state.enemy_spawn_timer -= 1
     if state.enemy_spawn_timer <= 0
-      state.enemies << { x: rand(1280), y: 720, w: 40, h: 40, speed: 2 + (state.wave * 0.5) }
+      spawn_enemy
       state.enemy_spawn_timer = 60 - (state.wave * 2)
     end
 
@@ -112,6 +114,12 @@ class Game
     # Render UI
     outputs.labels << [1220, 710, "Score: #{state.score}", 1, 1, 255, 255, 255]  # Adjusted position for upper right corner
     outputs.labels << [1220, 680, "Wave: #{state.wave}", 1, 1, 255, 255, 255]
+  end
+
+  def spawn_enemy
+    spawn_width = [state.screen_width / 4 * (state.wave / 5.0), state.screen_width].min
+    spawn_x = (state.screen_width - spawn_width) / 2 + rand(spawn_width)
+    state.enemies << { x: spawn_x, y: state.screen_height, w: 40, h: 40, speed: 2 + (state.wave * 0.5) }
   end
 end
 
