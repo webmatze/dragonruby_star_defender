@@ -12,7 +12,7 @@ class Game
 
   def defaults
     # Initialize game state
-    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5 }
+    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
     state.bullets ||= []
     state.enemies ||= []
     state.wave ||= 1
@@ -63,6 +63,7 @@ class Game
     render_enemies
     render_explosions
     render_ui
+    render_player_health
   end
 
   def move_bullets
@@ -112,8 +113,7 @@ class Game
     state.enemies.reject! do |enemy|
       if state.player.intersect_rect?(enemy)
         if state.player_hit_cooldown <= 0
-          state.score -= 2
-          state.score = 0 if state.score < 0
+          state.player.health -= 1
           state.player_hit_cooldown = 60
         end
         create_explosion(enemy)
@@ -195,6 +195,13 @@ class Game
   def render_ui
     outputs.labels << [1220, 710, "Score: #{state.score}", 1, 1, 255, 255, 255]
     outputs.labels << [1220, 680, "Wave: #{state.wave}", 1, 1, 255, 255, 255]
+  end
+
+  def render_player_health
+    10.times do |i|
+      color = i < state.player.health ? [255, 0, 0] : [100, 100, 100]
+      outputs.solids << [10 + (i * 30), 700, 20, 20, *color]
+    end
   end
 
   def spawn_enemy
