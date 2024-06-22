@@ -74,18 +74,21 @@ class Game
     state.explosions.reject! { |explosion| explosion.age > 25 }
 
     # Check player-enemy collisions
-    if state.player_hit_cooldown <= 0
-      state.enemies.each do |enemy|
-        if state.player.intersect_rect?(enemy)
-          state.score -= 10
+    state.enemies.reject! do |enemy|
+      # only subsctract from score if player is hit while not in cooldown
+      puts state.player_hit_cooldown
+      if state.player.intersect_rect?(enemy)
+        if state.player_hit_cooldown <= 0
+          state.score -= 2
           state.score = 0 if state.score < 0  # Prevent negative score
           state.player_hit_cooldown = 60  # Set cooldown to 1 second (60 frames)
-          break
         end
+        # Create explosion for the enemy
+        state.explosions << { x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h / 2, width: 10, height: 10, opacity: 255, age: 0 }
+        true  # Remove the enemy
       end
-    else
-      state.player_hit_cooldown -= 1
     end
+    state.player_hit_cooldown -= 1 if state.player_hit_cooldown > 0
 
     # Increase difficulty
     if state.score > state.wave * 10
