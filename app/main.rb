@@ -158,7 +158,7 @@ class Game
   end
 
   def increase_difficulty
-    if state.score > state.wave * 10
+    if state.score > state.wave * 1000
       state.wave += 1
     end
   end
@@ -244,14 +244,14 @@ class Game
   end
 
   def render_ui
-    outputs.labels << [1220, 710, "Score: #{state.score}", 1, 1, 255, 255, 255]
-    outputs.labels << [1220, 680, "Wave: #{state.wave}", 1, 1, 255, 255, 255]
+    outputs.labels << { x: 10, y: 710, text: "Score: #{state.score}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
+    outputs.labels << { x: 21, y: 680, text: "Wave: #{state.wave}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
   end
 
   def render_player_health
     10.times do |i|
       color = i < state.player.health ? [255, 0, 0] : [100, 100, 100]
-      outputs.solids << [10 + (i * 30), 700, 20, 20, *color]
+      outputs.solids << [state.screen_width - 20 - (i * 30), 700, 20, 20, *color]
     end
   end
 
@@ -268,9 +268,9 @@ class Game
 
   def initialize_enemy_types
     [
-      { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 1, angle: -90, shoot_rate: 300 },
-      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 3, angle: -90, shoot_rate: 600 },
-      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 2, angle: -90, shoot_rate: 0 }
+      { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
+      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
+      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
     ]
   end
 
