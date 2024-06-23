@@ -35,6 +35,15 @@ class Game
       restart_game if inputs.keyboard.key_down.r
       return
     end
+
+    # Speed powerup
+    if state.player.powerups.include?(:speed)
+      state.player.speed = 10
+    else
+      state.player.speed = 5
+    end
+
+
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
@@ -135,8 +144,14 @@ class Game
   end
 
   def spawn_powerup
-    powerup_types = [:multi_shot]
-    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 40, h: 40, type: powerup_types.sample }
+    powerup_types = [
+      { type: :multi_shot, sprite: 'sprites/square/blue.png' },
+      { type: :health, sprite: 'sprites/square/green.png' },
+      { type: :speed, sprite: 'sprites/square/red.png' }
+    ]
+    # select a random powerup
+    random_powerup = powerup_types.sample
+    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 40, h: 40, type: random_powerup[:type], sprite: random_powerup[:sprite] }
   end
 
   def create_explosion(entity)
@@ -203,8 +218,12 @@ class Game
   end
 
   def apply_powerup(powerup)
-    state.player.powerups << powerup.type
-    state.player.powerups.uniq!
+    if powerup[:type] == :health
+      state.player.health = 10
+    else
+      state.player.powerups << powerup[:type]
+      state.player.powerups.uniq!
+    end
   end
 
   def fire_player_bullets
@@ -293,7 +312,7 @@ class Game
 
   def render_powerups
     outputs.sprites << state.powerups.map do |powerup|
-      [powerup.x, powerup.y, powerup.w, powerup.h, 'sprites/hexagon/violet.png', 0, 255]
+      [powerup.x, powerup.y, powerup.w, powerup.h, powerup.sprite, 0, 255]
     end
   end
 
