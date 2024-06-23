@@ -12,7 +12,7 @@ class Game
 
   def defaults
     # Initialize game state
-    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
+    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
     state.bullets ||= []
     state.enemy_bullets ||= []
     state.enemies ||= []
@@ -21,6 +21,8 @@ class Game
     state.enemy_spawn_timer ||= 60
     state.player_hit_cooldown ||= 0
     state.explosions ||= []
+    state.powerups ||= []
+    state.powerup_spawn_timer ||= 600  # Spawn a powerup every 10 seconds
     state.screen_width ||= 1280
     state.screen_height ||= 720
     state.enemy_types ||= initialize_enemy_types
@@ -45,7 +47,7 @@ class Game
 
     # Shooting
     if inputs.keyboard.key_down.space
-      state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10 }
+      fire_player_bullets
     end
   end
 
@@ -56,10 +58,13 @@ class Game
     move_bullets
     move_enemy_bullets
     move_enemies
+    move_powerups
     spawn_enemies
+    spawn_powerups
     check_collisions
     check_player_enemy_collisions
     check_player_enemy_bullet_collisions
+    check_player_powerup_collisions
     increase_difficulty
     check_game_over
   end
@@ -74,6 +79,7 @@ class Game
       render_enemy_bullets
       render_enemies
       render_explosions
+      render_powerups
       render_ui
       render_player_health
     else
@@ -83,8 +89,11 @@ class Game
   end
 
   def move_bullets
-    state.bullets.each { |bullet| bullet.y += bullet.speed }
-    state.bullets.reject! { |bullet| bullet.y > state.screen_height }
+    state.bullets.each do |bullet|
+      bullet.x += Math.cos(bullet.angle * Math::PI / 180) * bullet.speed
+      bullet.y += Math.sin(bullet.angle * Math::PI / 180) * bullet.speed
+    end
+    state.bullets.reject! { |bullet| bullet.y > state.screen_height || bullet.x < 0 || bullet.x > state.screen_width }
   end
 
   def move_enemy_bullets
@@ -97,12 +106,30 @@ class Game
     state.enemies.reject! { |enemy| enemy.y < 0 }
   end
 
+  def move_powerups
+    state.powerups.each { |powerup| powerup.y -= 1 }
+    state.powerups.reject! { |powerup| powerup.y < 0 }
+  end
+
   def spawn_enemies
     state.enemy_spawn_timer -= 1
     if state.enemy_spawn_timer <= 0
       spawn_enemy
       state.enemy_spawn_timer = 60 - (state.wave * 2)
     end
+  end
+
+  def spawn_powerups
+    state.powerup_spawn_timer -= 1
+    if state.powerup_spawn_timer <= 0
+      spawn_powerup
+      state.powerup_spawn_timer = 600
+    end
+  end
+
+  def spawn_powerup
+    powerup_types = [:multi_shot]
+    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 40, h: 40, type: powerup_types.sample }
   end
 
   def check_collisions
@@ -117,6 +144,30 @@ class Game
           end
         end
       end
+    end
+  end
+
+  def check_player_powerup_collisions
+    state.powerups.reject! do |powerup|
+      if state.player.intersect_rect?(powerup)
+        apply_powerup(powerup)
+        true
+      end
+    end
+  end
+
+  def apply_powerup(powerup)
+    state.player.powerups << powerup.type
+    state.player.powerups.uniq!
+  end
+
+  def fire_player_bullets
+    if state.player.powerups.include?(:multi_shot)
+      [-30, 0, 30].each do |angle_offset|
+        state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10, angle: 90 + angle_offset }
+      end
+    else
+      state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10, angle: 90 }
     end
   end
 
@@ -243,6 +294,12 @@ class Game
     end
   end
 
+  def render_powerups
+    outputs.sprites << state.powerups.map do |powerup|
+      [powerup.x, powerup.y, powerup.w, powerup.h, 'sprites/hexagon/violet.png', 0, 255]
+    end
+  end
+
   def render_ui
     outputs.labels << { x: 10, y: 710, text: "Score: #{state.score}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
     outputs.labels << { x: 21, y: 680, text: "Wave: #{state.wave}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
@@ -275,13 +332,15 @@ class Game
   end
 
   def restart_game
-    state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
+    state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
     state.bullets = []
     state.enemy_bullets = []
     state.enemies = []
+    state.powerups = []
     state.wave = 1
     state.score = 0
     state.enemy_spawn_timer = 60
+    state.powerup_spawn_timer = 600
     state.player_hit_cooldown = 0
     state.explosions = []
     state.game_over = false
