@@ -28,7 +28,10 @@ class Game
   end
 
   def input
-    return if state.game_over
+    if state.game_over
+      restart_game if inputs.keyboard.key_down.r
+      return
+    end
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
@@ -175,6 +178,7 @@ class Game
 
   def render_game_over
     outputs.labels << [state.screen_width / 2, state.screen_height / 2, "You lose!", 5, 1, 255, 0, 0]
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2 - 50, "Press 'R' to restart", 2, 1, 255, 255, 255]
   end
 
   def render_starfield
@@ -242,6 +246,18 @@ class Game
       { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 3, angle: -90 },
       { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 2, angle: -90 }
     ]
+  end
+
+  def restart_game
+    state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
+    state.bullets = []
+    state.enemies = []
+    state.wave = 1
+    state.score = 0
+    state.enemy_spawn_timer = 60
+    state.player_hit_cooldown = 0
+    state.explosions = []
+    state.game_over = false
   end
 end
 
