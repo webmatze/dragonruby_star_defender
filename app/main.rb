@@ -14,6 +14,7 @@ class Game
     # Initialize game state
     state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
     state.bullets ||= []
+    state.enemy_bullets ||= []
     state.enemies ||= []
     state.wave ||= 1
     state.score ||= 0
@@ -53,10 +54,12 @@ class Game
     update_explosions
     return if state.game_over
     move_bullets
+    move_enemy_bullets
     move_enemies
     spawn_enemies
     check_collisions
     check_player_enemy_collisions
+    check_player_enemy_bullet_collisions
     increase_difficulty
     check_game_over
   end
@@ -68,6 +71,7 @@ class Game
     unless state.game_over
       render_player
       render_bullets
+      render_enemy_bullets
       render_enemies
       render_explosions
       render_ui
@@ -81,6 +85,11 @@ class Game
   def move_bullets
     state.bullets.each { |bullet| bullet.y += bullet.speed }
     state.bullets.reject! { |bullet| bullet.y > state.screen_height }
+  end
+
+  def move_enemy_bullets
+    state.enemy_bullets.each { |bullet| bullet.y -= bullet.speed }
+    state.enemy_bullets.reject! { |bullet| bullet.y < 0 }
   end
 
   def move_enemies
@@ -133,6 +142,19 @@ class Game
       end
     end
     state.player_hit_cooldown -= 1 if state.player_hit_cooldown > 0
+  end
+
+  def check_player_enemy_bullet_collisions
+    state.enemy_bullets.reject! do |bullet|
+      if state.player.intersect_rect?(bullet)
+        if state.player_hit_cooldown <= 0
+          state.player.health -= 1
+          state.player_hit_cooldown = 60
+        end
+        create_explosion(bullet)
+        true
+      end
+    end
   end
 
   def increase_difficulty
@@ -195,6 +217,10 @@ class Game
     outputs.solids << state.bullets.map { |b| [b.x, b.y, b.w, b.h, 255, 255, 0] }
   end
 
+  def render_enemy_bullets
+    outputs.solids << state.enemy_bullets.map { |b| [b.x, b.y, b.w, b.h, 255, 0, 0] }
+  end
+
   def render_enemies
     outputs.sprites << state.enemies.map { |e| [e.x, e.y, e.w, e.h, e.sprite, e.angle] }
   end
@@ -242,15 +268,16 @@ class Game
 
   def initialize_enemy_types
     [
-      { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 1, angle: -90 },
-      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 3, angle: -90 },
-      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 2, angle: -90 }
+      { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 1, angle: -90, shoot_rate: 300 },
+      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 3, angle: -90, shoot_rate: 600 },
+      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 2, angle: -90, shoot_rate: 0 }
     ]
   end
 
   def restart_game
     state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10 }
     state.bullets = []
+    state.enemy_bullets = []
     state.enemies = []
     state.wave = 1
     state.score = 0
@@ -262,7 +289,7 @@ class Game
 end
 
 class Enemy
-  attr_accessor :x, :y, :w, :h, :speed, :health, :sprite, :angle, :score_value
+  attr_accessor :x, :y, :w, :h, :speed, :health, :sprite, :angle, :score_value, :shoot_rate
 
   def initialize(x, y, type)
     @x = x
@@ -274,11 +301,14 @@ class Enemy
     @sprite = type[:sprite]
     @angle = type[:angle]
     @score_value = type[:score_value]
+    @shoot_rate = type[:shoot_rate]
+    @last_shot_time = 0
     @movement_pattern = method("move_#{type[:name]}")
   end
 
   def move
     @movement_pattern.call
+    fire_bullet if can_shoot?
   end
 
   def hit
@@ -299,6 +329,16 @@ class Enemy
   def move_fast
     @y -= @speed
     @x += Math.cos($game.state.tick_count * 0.2) * 3
+  end
+
+  def can_shoot?
+    return false if @shoot_rate <= 0
+    $game.state.tick_count - @last_shot_time >= @shoot_rate
+  end
+
+  def fire_bullet
+    $game.state.enemy_bullets << { x: @x + @w / 2, y: @y, w: 5, h: 10, speed: 5 }
+    @last_shot_time = $game.state.tick_count
   end
 end
 
