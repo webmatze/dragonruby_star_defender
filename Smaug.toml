@@ -1,10 +1,10 @@
 [project]
 # The name of your game's executable. This should only contain a-z, A-Z, 0-9, _ or -.
-name = "claude_test"
+name = "dragonruby_star_defender"
 # The game's title. This will show up in the tile bar of your executable.
-title = "claude_test"
+title = "DragonRuby Star Defender"
 version = "0.1.0"
-authors = ["My Name <todo@example.com>"]
+authors = ["Mathias Karstädt <mathias.karstaedt@gmail.com>"]
 icon = "metadata/icon.png"
 compile_ruby = false
 
@@ -19,4 +19,4 @@ edition = "pro"
 # This will also be the name of your build files, so fill it out even if you aren't uploading to Itch.io.
 url = "todo-change-me"
 # Your username on Itch.io.
-username = "todo-change-me"
+username = "webmatze"
