@@ -246,7 +246,8 @@ class Game
   end
 
   def render_game_over
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2, "You lose!", 5, 1, 255, 0, 0]
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2 + 50, "You lose!", 5, 1, 255, 0, 0]
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2, "Final Score: #{state.score}", 3, 1, 255, 255, 0]
     outputs.labels << [state.screen_width / 2, state.screen_height / 2 - 50, "Press 'R' to restart", 2, 1, 255, 255, 255]
   end
 
