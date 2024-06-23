@@ -46,15 +46,15 @@ class Game
   end
 
   def calc
+    update_starfield
+    update_explosions
     return if state.game_over
     move_bullets
     move_enemies
     spawn_enemies
     check_collisions
-    update_explosions
     check_player_enemy_collisions
     increase_difficulty
-    update_starfield
     check_game_over
   end
 
@@ -70,6 +70,7 @@ class Game
       render_ui
       render_player_health
     else
+      render_explosions
       render_game_over
     end
   end
@@ -155,6 +156,7 @@ class Game
   def check_game_over
     if state.player.health <= 0
       state.game_over = true
+      state.enemies.each { |enemy| create_explosion(enemy) }
       state.enemies.clear
     end
   end
