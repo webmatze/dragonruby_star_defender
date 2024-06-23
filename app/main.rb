@@ -13,6 +13,7 @@ class Game
   def defaults
     # Initialize game state
     state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
+    state.shield ||= { x: 0, y: 0, w: 0, h: 0, active: false }
     state.bullets ||= []
     state.enemy_bullets ||= []
     state.enemies ||= []
@@ -64,6 +65,7 @@ class Game
     update_starfield
     update_explosions
     return if state.game_over
+    move_shield
     move_bullets
     move_enemy_bullets
     move_enemies
@@ -120,6 +122,18 @@ class Game
     state.powerups.reject! { |powerup| powerup.y < 0 }
   end
 
+  def move_shield
+    if state.player.powerups.include?(:shield)
+      state.shield.x = state.player.x + state.player.w / 2 - state.shield.w / 2
+      state.shield.y = state.player.y + state.player.h / 2 - state.shield.h / 2
+      state.shield.w = [state.player.w, state.player.h].max * 1.8
+      state.shield.h = [state.player.w, state.player.h].max * 1.8
+      state.shield.active = true
+    else
+      state.shield.active = false
+    end
+  end
+
   def spawn_enemies
     state.enemy_spawn_timer -= 1
     if state.enemy_spawn_timer <= 0
@@ -147,7 +161,8 @@ class Game
     powerup_types = [
       { type: :multi_shot, sprite: 'sprites/square/blue.png' },
       { type: :health, sprite: 'sprites/square/green.png' },
-      { type: :speed, sprite: 'sprites/square/red.png' }
+      { type: :speed, sprite: 'sprites/square/red.png' },
+      { type: :shield, sprite: 'sprites/square/yellow.png' }
     ]
     # select a random powerup
     random_powerup = powerup_types.sample
@@ -192,13 +207,20 @@ class Game
 
   def check_player_enemy_collisions
     state.enemies.reject! do |enemy|
-      if state.player.intersect_rect?(enemy)
-        if state.player_hit_cooldown <= 0
-          state.player.health -= 1
-          state.player_hit_cooldown = 60
+      if state.shield.active
+        if state.shield.intersect_rect?(enemy)
+          create_explosion(enemy)
+          true
         end
-        create_explosion(enemy)
-        true
+      else
+        if state.player.intersect_rect?(enemy)
+          if state.player_hit_cooldown <= 0
+            state.player.health -= 1
+            state.player_hit_cooldown = 60
+          end
+          create_explosion(enemy)
+          true
+        end
       end
     end
     state.player_hit_cooldown -= 1 if state.player_hit_cooldown > 0
@@ -206,13 +228,20 @@ class Game
 
   def check_player_enemy_bullet_collisions
     state.enemy_bullets.reject! do |bullet|
-      if state.player.intersect_rect?(bullet)
-        if state.player_hit_cooldown <= 0
-          state.player.health -= 1
-          state.player_hit_cooldown = 60
+      if state.shield.active
+        if state.shield.intersect_rect?(bullet)
+          create_explosion(bullet)
+          true
         end
-        create_explosion(bullet)
-        true
+      else
+        if state.player.intersect_rect?(bullet)
+          if state.player_hit_cooldown <= 0
+            state.player.health -= 1
+            state.player_hit_cooldown = 60
+          end
+          create_explosion(bullet)
+          true
+        end
       end
     end
   end
@@ -278,6 +307,13 @@ class Game
 
   def render_player
     outputs.sprites << [state.player.x, state.player.y, state.player.w, state.player.h, 'sprites/triangle/equilateral/orange.png']
+
+    if state.player.powerups.include?(:shield)
+      shield_size = [state.player.w, state.player.h].max * 1.8
+      shield_x = state.player.x + state.player.w / 2 - shield_size / 2
+      shield_y = state.player.y + state.player.h / 2 - shield_size / 2
+      outputs.sprites << [shield_x, shield_y, shield_size, shield_size, 'sprites/circle/yellow.png', 0, 64]
+    end
   end
 
   def render_bullets
