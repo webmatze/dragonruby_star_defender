@@ -119,6 +119,13 @@ class Game
     end
   end
 
+  def spawn_enemy
+    enemy_type = state.enemy_types.sample
+    spawn_width = [state.screen_width / 4 * (state.wave / 5.0), state.screen_width].min
+    spawn_x = (state.screen_width - spawn_width) / 2 + rand(spawn_width)
+    state.enemies << Enemy.new(spawn_x, state.screen_height, enemy_type)
+  end
+
   def spawn_powerups
     state.powerup_spawn_timer -= 1
     if state.powerup_spawn_timer <= 0
@@ -130,6 +137,10 @@ class Game
   def spawn_powerup
     powerup_types = [:multi_shot]
     state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 40, h: 40, type: powerup_types.sample }
+  end
+
+  def create_explosion(entity)
+    state.explosions << { x: entity.x + entity.w / 2, y: entity.y + entity.h / 2, width: 10, height: 10, opacity: 255, age: 0 }
   end
 
   def check_collisions
@@ -151,6 +162,41 @@ class Game
     state.powerups.reject! do |powerup|
       if state.player.intersect_rect?(powerup)
         apply_powerup(powerup)
+        true
+      end
+    end
+  end
+
+  def check_game_over
+    if state.player.health <= 0
+      state.game_over = true
+      state.enemies.each { |enemy| create_explosion(enemy) }
+      state.enemies.clear
+    end
+  end
+
+  def check_player_enemy_collisions
+    state.enemies.reject! do |enemy|
+      if state.player.intersect_rect?(enemy)
+        if state.player_hit_cooldown <= 0
+          state.player.health -= 1
+          state.player_hit_cooldown = 60
+        end
+        create_explosion(enemy)
+        true
+      end
+    end
+    state.player_hit_cooldown -= 1 if state.player_hit_cooldown > 0
+  end
+
+  def check_player_enemy_bullet_collisions
+    state.enemy_bullets.reject! do |bullet|
+      if state.player.intersect_rect?(bullet)
+        if state.player_hit_cooldown <= 0
+          state.player.health -= 1
+          state.player_hit_cooldown = 60
+        end
+        create_explosion(bullet)
         true
       end
     end
@@ -181,59 +227,9 @@ class Game
     state.explosions.reject! { |explosion| explosion.age > 25 }
   end
 
-  def check_player_enemy_collisions
-    state.enemies.reject! do |enemy|
-      if state.player.intersect_rect?(enemy)
-        if state.player_hit_cooldown <= 0
-          state.player.health -= 1
-          state.player_hit_cooldown = 60
-        end
-        create_explosion(enemy)
-        true
-      end
-    end
-    state.player_hit_cooldown -= 1 if state.player_hit_cooldown > 0
-  end
-
-  def check_player_enemy_bullet_collisions
-    state.enemy_bullets.reject! do |bullet|
-      if state.player.intersect_rect?(bullet)
-        if state.player_hit_cooldown <= 0
-          state.player.health -= 1
-          state.player_hit_cooldown = 60
-        end
-        create_explosion(bullet)
-        true
-      end
-    end
-  end
-
   def increase_difficulty
     if state.score > state.wave * 1000
       state.wave += 1
-    end
-  end
-
-  def initialize_starfield
-    state.starfield_layers ||= 4
-    state.starfield ||= state.starfield_layers.times.map do |layer|
-      100.times.map do
-        {
-          x: rand(state.screen_width),
-          y: rand(state.screen_height),
-          speed: (layer + 1) * 0.5,
-          size: (layer + 1) * 2,
-          alpha: 255 / (state.starfield_layers - layer)
-        }
-      end
-    end
-  end
-
-  def check_game_over
-    if state.player.health <= 0
-      state.game_over = true
-      state.enemies.each { |enemy| create_explosion(enemy) }
-      state.enemies.clear
     end
   end
 
@@ -312,23 +308,27 @@ class Game
     end
   end
 
-  def spawn_enemy
-    enemy_type = state.enemy_types.sample
-    spawn_width = [state.screen_width / 4 * (state.wave / 5.0), state.screen_width].min
-    spawn_x = (state.screen_width - spawn_width) / 2 + rand(spawn_width)
-    state.enemies << Enemy.new(spawn_x, state.screen_height, enemy_type)
-  end
-
-  def create_explosion(entity)
-    state.explosions << { x: entity.x + entity.w / 2, y: entity.y + entity.h / 2, width: 10, height: 10, opacity: 255, age: 0 }
-  end
-
   def initialize_enemy_types
     [
       { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
       { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
       { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
     ]
+  end
+
+  def initialize_starfield
+    state.starfield_layers ||= 4
+    state.starfield ||= state.starfield_layers.times.map do |layer|
+      100.times.map do
+        {
+          x: rand(state.screen_width),
+          y: rand(state.screen_height),
+          speed: (layer + 1) * 0.5,
+          size: (layer + 1) * 2,
+          alpha: 255 / (state.starfield_layers - layer)
+        }
+      end
+    end
   end
 
   def restart_game
