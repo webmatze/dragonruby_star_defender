@@ -99,6 +99,10 @@ class Game
     end
   end
 
+  def audio_manager
+    @audio_manager ||= AudioManager.new(args)
+  end
+
   def move_bullets
     state.bullets.each do |bullet|
       bullet.x += Math.cos(bullet.angle * Math::PI / 180) * bullet.speed
@@ -178,6 +182,7 @@ class Game
       state.enemies.reject! do |enemy|
         if bullet.intersect_rect?(enemy)
           enemy.hit
+          audio_manager.bullet_hit
           if enemy.health <= 0
             state.score += enemy.score_value
             create_explosion(enemy)
@@ -192,6 +197,7 @@ class Game
     state.powerups.reject! do |powerup|
       if state.player.intersect_rect?(powerup)
         apply_powerup(powerup)
+        audio_manager.powerup_pickup
         true
       end
     end
@@ -210,6 +216,7 @@ class Game
       if state.shield.active
         if state.shield.intersect_rect?(enemy)
           create_explosion(enemy)
+          audio_manager.shield_hit
           true
         end
       else
@@ -217,6 +224,7 @@ class Game
           if state.player_hit_cooldown <= 0
             state.player.health -= 1
             state.player_hit_cooldown = 60
+            audio_manager.player_hit
           end
           create_explosion(enemy)
           true
@@ -231,6 +239,7 @@ class Game
       if state.shield.active
         if state.shield.intersect_rect?(bullet)
           create_explosion(bullet)
+          audio_manager.shield_hit
           true
         end
       else
@@ -238,6 +247,7 @@ class Game
           if state.player_hit_cooldown <= 0
             state.player.health -= 1
             state.player_hit_cooldown = 60
+            audio_manager.player_hit
           end
           create_explosion(bullet)
           true
@@ -249,6 +259,7 @@ class Game
   def apply_powerup(powerup)
     if powerup[:type] == :health
       state.player.health = 10
+      audio_manager.health_pickup
     else
       state.player.powerups << powerup[:type]
       state.player.powerups.uniq!
@@ -263,6 +274,7 @@ class Game
     else
       state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10, angle: 90 }
     end
+    audio_manager.player_shoot
   end
 
   def update_explosions
@@ -454,6 +466,44 @@ class Enemy
   def fire_bullet
     $game.state.enemy_bullets << { x: @x + @w / 2, y: @y, w: 5, h: 10, speed: 5 }
     @last_shot_time = $game.state.tick_count
+  end
+end
+
+class AudioManager
+  def initialize(args)
+    @args = args
+  end
+
+  def play_sound(sound_name)
+    @args.outputs.sounds << "sounds/#{sound_name}.mp3"
+  end
+
+  def player_shoot
+    play_sound('Simple Shot 1')
+  end
+
+  def bullet_hit
+    play_sound('Simple Shot 2')
+  end
+
+  def explosion
+    play_sound('Explosion 1')
+  end
+
+  def player_hit
+    play_sound('Explosion 2')
+  end
+
+  def shield_hit
+    play_sound('Turn Off')
+  end
+
+  def powerup_pickup
+    play_sound('What')
+  end
+
+  def health_pickup
+    play_sound('Triple Bleep')
   end
 end
 

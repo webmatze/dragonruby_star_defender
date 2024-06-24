@@ -26,5 +26,8 @@ Use Smaug to run the game:
 smaug run
 ```
 
+### Sounds
+
+The game uses the [107 Free Retro Game Sounds](https://dominik-braun.net/retro-sounds/) sound library by Dominik Braun to play sounds. The sounds are stored in the `sounds` directory. (Licence: [Creative Commons Lizenz CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.de))
 
 
