@@ -164,14 +164,14 @@ class Game
 
   def spawn_powerup
     powerup_types = [
-      { type: :multi_shot, sprite: 'sprites/square/blue.png' },
-      { type: :health, sprite: 'sprites/square/green.png' },
-      { type: :speed, sprite: 'sprites/square/red.png' },
-      { type: :shield, sprite: 'sprites/square/yellow.png' }
+      { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png' },
+      { type: :health, sprite: 'sprites/powerups/powerups-4.png' },
+      { type: :speed, sprite: 'sprites/powerups/powerups-3.png' },
+      { type: :shield, sprite: 'sprites/powerups/powerups-1.png' }
     ]
     # select a random powerup
     random_powerup = powerup_types.sample
-    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 40, h: 40, type: random_powerup[:type], sprite: random_powerup[:sprite] }
+    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 64, h: 64, type: random_powerup[:type], sprite: random_powerup[:sprite] }
   end
 
   def create_explosion(entity)
@@ -321,7 +321,7 @@ class Game
   end
 
   def render_player
-    outputs.sprites << [state.player.x, state.player.y, state.player.w, state.player.h, 'sprites/triangle/equilateral/orange.png']
+    outputs.sprites << [state.player.x, state.player.y, state.player.w, state.player.h, 'sprites/ship/space ship-2.png']
 
     if state.player.powerups.include?(:shield)
       shield_size = [state.player.w, state.player.h].max * 1.8
