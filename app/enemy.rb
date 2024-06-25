@@ -47,7 +47,7 @@ class Enemy
   end
 
   def fire_bullet
-    $game.state.enemy_bullets << { x: @x + @w / 2, y: @y, w: 5, h: 10, speed: 5 }
+    $game.enemy_bullet_manager.create_bullet(:straight, @x + @w / 2, @y, 270)
     @last_shot_time = $game.state.tick_count
   end
 end

@@ -13,8 +13,6 @@ class Game
     # Initialize game state
     state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
     state.shield ||= { x: 0, y: 0, w: 0, h: 0, active: false }
-    state.bullets ||= []
-    state.enemy_bullets ||= []
     state.enemies ||= []
     state.wave ||= 1
     state.score ||= 0
@@ -35,8 +33,8 @@ class Game
     update_explosions
     return if state.game_over
     move_shield
-    move_bullets
-    move_enemy_bullets
+    bullet_manager.update
+    enemy_bullet_manager.update
     move_enemies
     move_powerups
     spawn_enemies
@@ -76,17 +74,12 @@ class Game
     @input_handler ||= InputHandler.new(self)
   end
 
-  def move_bullets
-    state.bullets.each do |bullet|
-      bullet.x += Math.cos(bullet.angle * Math::PI / 180) * bullet.speed
-      bullet.y += Math.sin(bullet.angle * Math::PI / 180) * bullet.speed
-    end
-    state.bullets.reject! { |bullet| bullet.y > state.screen_height || bullet.x < 0 || bullet.x > state.screen_width }
+  def bullet_manager
+    @bullet_manager ||= BulletManager.new(self)
   end
 
-  def move_enemy_bullets
-    state.enemy_bullets.each { |bullet| bullet.y -= bullet.speed }
-    state.enemy_bullets.reject! { |bullet| bullet.y < 0 }
+  def enemy_bullet_manager
+    @enemy_bullet_manager ||= BulletManager.new(self)
   end
 
   def move_enemies
@@ -139,7 +132,8 @@ class Game
       { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png' },
       { type: :health, sprite: 'sprites/powerups/powerups-4.png' },
       { type: :speed, sprite: 'sprites/powerups/powerups-3.png' },
-      { type: :shield, sprite: 'sprites/powerups/powerups-1.png' }
+      { type: :shield, sprite: 'sprites/powerups/powerups-1.png' },
+      { type: :seeking, sprite: 'sprites/hexagon/indigo.png' }
     ]
     # select a random powerup
     random_powerup = powerup_types.sample
@@ -151,7 +145,7 @@ class Game
   end
 
   def check_collisions
-    state.bullets.reject! do |bullet|
+    bullet_manager.bullets.reject! do |bullet|
       state.enemies.reject! do |enemy|
         if bullet.intersect_rect?(enemy)
           enemy.hit
@@ -210,15 +204,15 @@ class Game
   end
 
   def check_player_enemy_bullet_collisions
-    state.enemy_bullets.reject! do |bullet|
+    enemy_bullet_manager.bullets.reject! do |bullet|
       if state.shield.active
-        if state.shield.intersect_rect?(bullet)
+        if bullet.intersect_rect?(state.shield)
           create_explosion(bullet)
           audio_manager.shield_hit
           true
         end
       else
-        if state.player.intersect_rect?(bullet)
+        if bullet.intersect_rect?(state.player)
           if state.player_hit_cooldown <= 0
             state.player.health -= 1
             state.player_hit_cooldown = 60
@@ -242,12 +236,14 @@ class Game
   end
 
   def fire_player_bullets
-    if state.player.powerups.include?(:multi_shot)
+    if state.player.powerups.include?(:seeking)
+      bullet_manager.create_bullet(:seeking, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
+    elsif state.player.powerups.include?(:multi_shot)
       [-30, 0, 30].each do |angle_offset|
-        state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10, angle: 90 + angle_offset }
+        bullet_manager.create_bullet(:angled, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90 + angle_offset)
       end
     else
-      state.bullets << { x: state.player.x + state.player.w / 2, y: state.player.y + state.player.h, w: 5, h: 10, speed: 10, angle: 90 }
+      bullet_manager.create_bullet(:straight, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
     end
     audio_manager.player_shoot
   end
@@ -304,11 +300,15 @@ class Game
   end
 
   def render_bullets
-    outputs.solids << state.bullets.map { |b| [b.x, b.y, b.w, b.h, 255, 255, 0] }
+    bullet_manager.bullets.each do |bullet|
+      outputs.solids << [bullet.x, bullet.y, bullet.w, bullet.h, 255, 255, 0]
+    end
   end
 
   def render_enemy_bullets
-    outputs.solids << state.enemy_bullets.map { |b| [b.x, b.y, b.w, b.h, 255, 0, 0] }
+    enemy_bullet_manager.bullets.each do |bullet|
+      outputs.solids << [bullet.x, bullet.y, bullet.w, bullet.h, 255, 0, 0]
+    end
   end
 
   def render_enemies
@@ -376,8 +376,8 @@ class Game
 
   def restart_game
     state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
-    state.bullets = []
-    state.enemy_bullets = []
+    bullet_manager.bullets = []
+    enemy_bullet_manager.bullets = []
     state.enemies = []
     state.powerups = []
     state.wave = 1
