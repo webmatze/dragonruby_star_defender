@@ -26,7 +26,7 @@ class InputHandler
 
     # Speed powerup
     if state.player.powerups.include?(:speed)
-      state.player.speed = 10
+      state.player.speed = 5 + (state.player.powerups[:speed][:level] * 2)
     else
       state.player.speed = 5
     end

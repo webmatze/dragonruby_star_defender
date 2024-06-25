@@ -11,7 +11,7 @@ class Game
 
   def defaults
     # Initialize game state
-    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
+    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: {} }
     state.shield ||= { x: 0, y: 0, w: 0, h: 0, active: false }
     state.enemies ||= []
     state.wave ||= 1
@@ -35,6 +35,7 @@ class Game
     move_shield
     bullet_manager.update
     enemy_bullet_manager.update
+    update_powerups
     move_enemies
     move_powerups
     spawn_enemies
@@ -128,15 +129,23 @@ class Game
 
   def spawn_powerup
     powerup_types = [
-      { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png' },
-      { type: :health, sprite: 'sprites/powerups/powerups-4.png' },
-      { type: :speed, sprite: 'sprites/powerups/powerups-3.png' },
-      { type: :shield, sprite: 'sprites/powerups/powerups-1.png' },
-      { type: :seeking, sprite: 'sprites/hexagon/indigo.png' }
+      { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
+      { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
+      { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
+      { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
+      { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
     ]
-    # select a random powerup
     random_powerup = powerup_types.sample
-    state.powerups << { x: rand(state.screen_width), y: state.screen_height, w: 64, h: 64, type: random_powerup[:type], sprite: random_powerup[:sprite] }
+    state.powerups << {
+      x: rand(state.screen_width),
+      y: state.screen_height,
+      w: 64,
+      h: 64,
+      type: random_powerup[:type],
+      sprite: random_powerup[:sprite],
+      max_level: random_powerup[:max_level],
+      priority: random_powerup[:priority]
+    }
   end
 
   def create_explosion(entity)
@@ -229,19 +238,48 @@ class Game
 
   def apply_powerup(powerup)
     if powerup[:type] == :health
-      state.player.health = 10
+      state.player.health = [state.player.health + 3, 10].min
       audio_manager.health_pickup
     else
-      state.player.powerups << powerup[:type]
-      state.player.powerups.uniq!
+      current_powerup = state.player.powerups[powerup[:type]]
+      if current_powerup
+        if current_powerup[:level] < powerup[:max_level]
+          current_powerup[:level] += 1
+          current_powerup[:health] = 3
+        else
+          current_powerup[:health] = [current_powerup[:health] + 2, 5].min
+        end
+      else
+        state.player.powerups[powerup[:type]] = {
+          type: powerup[:type],
+          level: 1,
+          health: 3,
+          max_level: powerup[:max_level],
+          priority: powerup[:priority]
+        }
+      end
     end
   end
 
+  def update_powerups
+    #state.player.powerups.each do |type, powerup|
+    #  powerup[:health] -= 1 if powerup[:health] > 0
+    #end
+    state.player.powerups.reject! { |_, powerup| powerup[:health] <= 0 }
+  end
+
   def fire_player_bullets
-    if state.player.powerups.include?(:seeking)
+    active_weapon = state.player.powerups.values.max_by { |p| p[:priority] }
+    case active_weapon&.[](:type)
+    when :seeking
       bullet_manager.create_bullet(:seeking, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
-    elsif state.player.powerups.include?(:multi_shot)
-      [-30, 0, 30].each do |angle_offset|
+    when :multi_shot
+      angles = case active_weapon[:level]
+               when 1 then [-30, 0, 30]
+               when 2 then [-45, -15, 15, 45]
+               when 3 then [-60, -30, 0, 30, 60]
+               end
+      angles.each do |angle_offset|
         bullet_manager.create_bullet(:angled, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90 + angle_offset)
       end
     else
@@ -350,10 +388,9 @@ class Game
   end
 
   def render_powerup_inventory
-    state.player.powerups.each_with_index do |powerup, index|
-      powerup_sprite = case powerup
+    state.player.powerups.each_with_index do |(type, powerup), index|
+      powerup_sprite = case type
                        when :multi_shot then 'sprites/powerups/powerups-2.png'
-                       when :health then 'sprites/powerups/powerups-4.png'
                        when :speed then 'sprites/powerups/powerups-3.png'
                        when :shield then 'sprites/powerups/powerups-1.png'
                        when :seeking then 'sprites/hexagon/indigo.png'
@@ -361,6 +398,10 @@ class Game
 
       outputs.sprites << { x: 10, y: 540 - (index * 80), w: 64, h: 64, path: powerup_sprite }
       outputs.borders << { x: 8, y: 538 - (index * 80), w: 68, h: 68, r: 255, g: 255, b: 255 }
+
+      # Render level and health
+      outputs.labels << { x: 80, y: 580 - (index * 80), text: "Lvl: #{powerup[:level]}/#{powerup[:max_level]}", size_enum: 0, r: 255, g: 255, b: 255 }
+      outputs.labels << { x: 80, y: 560 - (index * 80), text: "HP: #{powerup[:health]}", size_enum: 0, r: 255, g: 255, b: 255 }
     end
   end
 

@@ -13,7 +13,8 @@ class BulletManager
              when :angled
                AngledBullet.new(x, y, 5, 10, 10, angle)
              when :seeking
-               SeekingBullet.new(x, y, 5, 10, 5, angle, target)
+               speed = 5 + (@game.state.player.powerups[:seeking][:level] * 3)
+               SeekingBullet.new(x, y, speed, 10, 5, angle, target)
              end
     @bullets << bullet
   end
