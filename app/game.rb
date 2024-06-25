@@ -146,10 +146,12 @@ class Game
 
   def check_collisions
     bullet_manager.bullets.reject! do |bullet|
+      bullet_hit = false
       state.enemies.reject! do |enemy|
         if bullet.intersect_rect?(enemy)
           enemy.hit
           audio_manager.bullet_hit
+          bullet_hit = true
           if enemy.health <= 0
             state.score += enemy.score_value
             create_explosion(enemy)
@@ -157,6 +159,7 @@ class Game
           end
         end
       end
+      bullet_hit
     end
   end
 
@@ -353,7 +356,7 @@ class Game
 
   def initialize_enemy_types
     [
-      { name: :basic, sprite: 'sprites/circle/red.png', health: 1, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
+      { name: :basic, sprite: 'sprites/circle/red.png', health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
       { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
       { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
     ]
