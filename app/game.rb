@@ -59,7 +59,6 @@ class Game
       render_explosions
       render_powerups
       render_ui
-      render_player_health
     else
       render_explosions
       render_game_over
@@ -345,6 +344,24 @@ class Game
   def render_ui
     outputs.labels << { x: 10, y: 710, text: "Score: #{state.score}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
     outputs.labels << { x: 21, y: 680, text: "Wave: #{state.wave}", size_enum: 1, alignment_enum: 0, r: 255, g: 255, b: 255 }
+
+    render_powerup_inventory
+    render_player_health
+  end
+
+  def render_powerup_inventory
+    state.player.powerups.each_with_index do |powerup, index|
+      powerup_sprite = case powerup
+                       when :multi_shot then 'sprites/powerups/powerups-2.png'
+                       when :health then 'sprites/powerups/powerups-4.png'
+                       when :speed then 'sprites/powerups/powerups-3.png'
+                       when :shield then 'sprites/powerups/powerups-1.png'
+                       when :seeking then 'sprites/hexagon/indigo.png'
+                       end
+
+      outputs.sprites << { x: 10, y: 540 - (index * 80), w: 64, h: 64, path: powerup_sprite }
+      outputs.borders << { x: 8, y: 538 - (index * 80), w: 68, h: 68, r: 255, g: 255, b: 255 }
+    end
   end
 
   def render_player_health
