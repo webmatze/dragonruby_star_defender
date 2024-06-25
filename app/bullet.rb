@@ -45,9 +45,11 @@ class SeekingBullet < Bullet
 
   def move
     if @target && @target.health > 0
-      target_angle = Math.atan2(@target.y - @y, @target.x - @x) * 180 / Math::PI
-      angle_diff = (target_angle - @angle + 180) % 360 - 180
-      @angle += [[@turn_speed, -@turn_speed].max, angle_diff].min
+      dx = @target.x - @x
+      dy = @target.y - @y
+      target_angle = Math.atan2(dy, dx) * 180 / Math::PI
+      angle_diff = ((target_angle - @angle + 540) % 360) - 180
+      @angle += angle_diff.clamp(-@turn_speed, @turn_speed)
     else
       new_target
     end
@@ -56,7 +58,7 @@ class SeekingBullet < Bullet
 
   def nearest_enemy
     $game.state.enemies.select { |enemy| enemy.y > @y }
-                 .min_by { |enemy| (@x - enemy.x).abs + (@y - enemy.y).abs }
+                 .min_by { |enemy| (enemy.x - @x).abs + (enemy.y - @y).abs }
   end
 
   def new_target
