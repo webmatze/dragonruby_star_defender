@@ -385,6 +385,12 @@ class Game
 
     render_powerup_inventory
     render_player_health
+    render_debug_information
+  end
+
+  def render_debug_information
+    args.outputs.debug << "current tick: #{Kernel.tick_count}"
+    args.outputs.debug << "FPS: #{args.gtk.current_framerate}"
   end
 
   def render_powerup_inventory
