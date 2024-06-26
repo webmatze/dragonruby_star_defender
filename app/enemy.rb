@@ -6,6 +6,7 @@ class Enemy
     @y = y
     @w = 40
     @h = 40
+    @created_at_tick = $game.state.tick_count
     @speed = type[:speed] + ($game.state.wave * 0.1)
     @health = type[:health]
     @sprite = type[:sprite]
@@ -27,18 +28,22 @@ class Enemy
 
   private
 
+  def ticks_elapsed
+    $game.state.tick_count - @created_at_tick
+  end
+
   def move_basic
     @y -= @speed
   end
 
   def move_tough
     @y -= @speed
-    @x += Math.sin($game.state.tick_count * 0.1) * 2
+    @x += Math.sin(ticks_elapsed * 0.1) * 2
   end
 
   def move_fast
     @y -= @speed
-    @x += Math.cos($game.state.tick_count * 0.2) * 3
+    @x += Math.cos(ticks_elapsed * 0.2) * 3
   end
 
   def can_shoot?
