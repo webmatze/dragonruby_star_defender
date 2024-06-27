@@ -53,6 +53,15 @@ class InputHandler
     if inputs.keyboard.key_down.minus || inputs.keyboard.key_down.underscore
       @game.audio_manager.decrease_volume
     end
+
+    # Mute/unmute
+    if inputs.keyboard.key_down.m
+      if @game.audio_manager.muted?
+        @game.audio_manager.unmute
+      else
+        @game.audio_manager.mute
+      end
+    end
   end
 
   def handle_mouse_input

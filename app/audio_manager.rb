@@ -3,6 +3,7 @@ class AudioManager
     @args = args
     @background_music_playing = false
     @volume = 1.0
+    @previous_volume = 1.0
   end
 
   def play_sound(key, sound_name)
@@ -29,6 +30,21 @@ class AudioManager
   def decrease_volume
     @volume = [@volume - 0.1, 0.0].max
     update_volume
+  end
+
+  def mute
+    @previous_volume = @volume
+    @volume = 0.0
+    update_volume
+  end
+
+  def unmute
+    @volume = @previous_volume
+    update_volume
+  end
+
+  def muted?
+    @volume == 0.0
   end
 
   def update_volume
