@@ -4,7 +4,7 @@ class Game
   def tick
     defaults
     input_handler.handle_input
-    calc
+    calc unless state.paused
     render
     audio_manager.play_background_music if state.tick_count == 1
   end
@@ -385,7 +385,14 @@ class Game
 
     render_powerup_inventory
     render_player_health
+    render_pause_menu if state.paused
     render_debug_information
+  end
+
+  def render_pause_menu
+    outputs.primitives << [0, 0, state.screen_width, state.screen_height, 0, 0, 0, 128].solid
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2 + 50, "PAUSED", 5, 1, 255, 255, 255]
+    outputs.labels << [state.screen_width / 2, state.screen_height / 2 - 50, "Press 'P' to resume", 2, 1, 255, 255, 255]
   end
 
   def render_debug_information

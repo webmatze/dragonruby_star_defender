@@ -24,6 +24,15 @@ class InputHandler
       return
     end
 
+    # Pause/Unpause
+    if inputs.keyboard.key_down.p
+      @game.audio_manager.play_background_music if state.paused
+      state.paused = !state.paused
+      @game.audio_manager.stop_background_music if state.paused
+    end
+
+    return if state.paused
+
     # Speed powerup
     if state.player.powerups.include?(:speed)
       state.player.speed = 5 + (state.player.powerups[:speed][:level] * 2)
