@@ -31,7 +31,6 @@ class InputHandler
       state.player.speed = 5
     end
 
-
     # Player movement
     state.player.x -= state.player.speed if inputs.keyboard.key_held.left
     state.player.x += state.player.speed if inputs.keyboard.key_held.right
@@ -47,6 +46,13 @@ class InputHandler
       @game.fire_player_bullets
     end
 
+    # Volume control
+    if inputs.keyboard.key_down.plus || inputs.keyboard.key_down.equal_sign
+      @game.audio_manager.increase_volume
+    end
+    if inputs.keyboard.key_down.minus || inputs.keyboard.key_down.underscore
+      @game.audio_manager.decrease_volume
+    end
   end
 
   def handle_mouse_input
