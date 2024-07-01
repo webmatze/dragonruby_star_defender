@@ -11,19 +11,17 @@ class Game
 
   def defaults
     # Initialize game state
-    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: {} }
+    state.enemy_types ||= initialize_enemy_types
+    initialize_level
+    state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: state.current_level.initial_player_health, powerups: {} }
     state.shield ||= { x: 0, y: 0, w: 0, h: 0, active: false }
     state.enemies ||= []
     state.wave ||= 1
     state.score ||= 0
-    state.enemy_spawn_timer ||= 60
-    state.player_hit_cooldown ||= 0
     state.explosions ||= []
     state.powerups ||= []
-    state.powerup_spawn_timer ||= 600  # Spawn a powerup every 10 seconds
     state.screen_width ||= 1280
     state.screen_height ||= 720
-    state.enemy_types ||= initialize_enemy_types
     state.game_over ||= false
     initialize_starfield
   end
@@ -46,6 +44,7 @@ class Game
     check_player_powerup_collisions
     increase_difficulty
     check_game_over
+    update_level_timer
   end
 
   def audio_manager
@@ -94,12 +93,12 @@ class Game
     state.enemy_spawn_timer -= 1
     if state.enemy_spawn_timer <= 0
       spawn_enemy
-      state.enemy_spawn_timer = 60 - (state.wave * 2)
+      state.enemy_spawn_timer = state.current_level.enemy_spawn_timer
     end
   end
 
   def spawn_enemy
-    enemy_type = state.enemy_types.sample
+    enemy_type = state.current_level.possible_enemies.sample
     spawn_width = [state.screen_width / 4 * (state.wave / 5.0), state.screen_width].min
     spawn_x = (state.screen_width - spawn_width) / 2 + rand(spawn_width)
     state.enemies << Enemy.new(spawn_x, state.screen_height, enemy_type)
@@ -109,28 +108,21 @@ class Game
     state.powerup_spawn_timer -= 1
     if state.powerup_spawn_timer <= 0
       spawn_powerup
-      state.powerup_spawn_timer = 600
+      state.powerup_spawn_timer = state.current_level.powerup_spawn_timer
     end
   end
 
   def spawn_powerup
-    powerup_types = [
-      { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
-      { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
-      { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
-      { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
-      { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
-    ]
-    random_powerup = powerup_types.sample
+    powerup = state.current_level.possible_powerups.sample
     state.powerups << {
       x: rand(state.screen_width),
       y: state.screen_height,
       w: 64,
       h: 64,
-      type: random_powerup[:type],
-      sprite: random_powerup[:sprite],
-      max_level: random_powerup[:max_level],
-      priority: random_powerup[:priority]
+      type: powerup[:type],
+      sprite: powerup[:sprite],
+      max_level: powerup[:max_level],
+      priority: powerup[:priority]
     }
   end
 
@@ -168,7 +160,7 @@ class Game
   end
 
   def check_game_over
-    if state.player.health <= 0
+    if state.player.health <= 0 || state.current_level.time_remaining <= 0
       state.game_over = true
       state.enemies.each { |enemy| create_explosion(enemy) }
       state.enemies.clear
@@ -224,7 +216,7 @@ class Game
 
   def apply_powerup(powerup)
     if powerup[:type] == :health
-      state.player.health = [state.player.health + 3, 10].min
+      state.player.health = [state.player.health + 3, state.current_level.initial_player_health].min
       audio_manager.health_pickup
     else
       current_powerup = state.player.powerups[powerup[:type]]
@@ -248,9 +240,6 @@ class Game
   end
 
   def update_powerups
-    #state.player.powerups.each do |type, powerup|
-    #  powerup[:health] -= 1 if powerup[:health] > 0
-    #end
     state.player.powerups.reject! { |_, powerup| powerup[:health] <= 0 }
   end
 
@@ -285,7 +274,7 @@ class Game
   end
 
   def increase_difficulty
-    if state.score > state.wave * 1000
+    if state.score > state.wave * 1000 && state.wave < state.current_level.max_waves
       state.wave += 1
     end
   end
@@ -325,17 +314,39 @@ class Game
     end
   end
 
+  def initialize_level
+    state.current_level ||= Level.new(
+      available_time: 60*60,
+      possible_enemies: state.enemy_types,
+      initial_player_health: 3,
+      possible_powerups: [
+        { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
+        { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
+        { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
+        { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
+        { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
+      ],
+      max_waves: 3,
+      powerup_spawn_timer: 600,
+      enemy_spawn_timer: 60
+    )
+    state.enemy_spawn_timer ||= state.current_level.enemy_spawn_timer
+    state.powerup_spawn_timer ||= state.current_level.powerup_spawn_timer
+  end
+
+  def update_level_timer
+    state.current_level.time_remaining -= 1 if state.current_level.time_remaining > 0
+  end
+
   def restart_game
-    state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: 10, powerups: [] }
+    initialize_level
+    state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: state.current_level.initial_player_health, powerups: {} }
     bullet_manager.bullets = []
     enemy_bullet_manager.bullets = []
     state.enemies = []
     state.powerups = []
     state.wave = 1
     state.score = 0
-    state.enemy_spawn_timer = 60
-    state.powerup_spawn_timer = 600
-    state.player_hit_cooldown = 0
     state.explosions = []
     state.game_over = false
     audio_manager.play_background_music

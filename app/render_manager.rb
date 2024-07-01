@@ -124,7 +124,7 @@ class RenderManager
   end
 
   def render_player_health
-    10.times do |i|
+    state.current_level.initial_player_health.times do |i|
       color = i < state.player.health ? [255, 0, 0] : [100, 100, 100]
       outputs.solids << [state.screen_width - 20 - (i * 30), 700, 20, 20, *color]
     end
