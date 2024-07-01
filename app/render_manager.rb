@@ -5,7 +5,7 @@ class RenderManager
 
   def render
     # Set background to black
-    outputs.solids << [0, 0, state.screen_width, state.screen_height, 0, 0, 0]
+    outputs.solids << { x: 0, y: 0, w: state.screen_width, h: state.screen_height, r: 0, g: 0, b: 0 }
     render_starfield
     unless state.game_over
       render_player
@@ -22,65 +22,65 @@ class RenderManager
   end
 
   def render_game_over
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2 + 50, "You lose!", 5, 1, 255, 0, 0]
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2, "Final Score: #{state.score}", 3, 1, 255, 255, 0]
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2 - 50, "Press 'R' to restart", 2, 1, 255, 255, 255]
+    outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 + 50, text: "You lose!", size_enum: 5, alignment_enum: 1, r: 255, g: 0, b: 0 }
+    outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2, text: "Final Score: #{state.score}", size_enum: 3, alignment_enum: 1, r: 255, g: 255, b: 0 }
+    outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 - 50, text: "Press 'R' to restart", size_enum: 2, alignment_enum: 1, r: 255, g: 255, b: 255 }
   end
 
   def render_starfield
     outputs.sprites << state.starfield.flatten.map do |star|
-      [star.x, star.y, star[:size], star[:size], 'sprites/circle/white.png', 0, star.alpha]
+      { x: star.x, y: star.y, w: star[:size], h: star[:size], path: 'sprites/circle/white.png', angle: 0, a: star.alpha }
     end
   end
 
   def render_player
-    outputs.sprites << [state.player.x, state.player.y, state.player.w, state.player.h, 'sprites/ship/space ship-2.png']
+    outputs.sprites << { x: state.player.x, y: state.player.y, w: state.player.w, h: state.player.h, path: 'sprites/ship/space ship-2.png' }
 
     if state.player.powerups.include?(:shield)
       shield_size = [state.player.w, state.player.h].max * 1.8
       shield_x = state.player.x + state.player.w / 2 - shield_size / 2
       shield_y = state.player.y + state.player.h / 2 - shield_size / 2
-      outputs.sprites << [shield_x, shield_y, shield_size, shield_size, 'sprites/circle/yellow.png', 0, 64]
+      outputs.sprites << { x: shield_x, y: shield_y, w: shield_size, h: shield_size, path: 'sprites/circle/yellow.png', angle: 0, a: 64 }
     end
   end
 
   def render_bullets
-    @game.bullet_manager.bullets.each do |bullet|
-      outputs.solids << [bullet.x, bullet.y, bullet.w, bullet.h, 255, 255, 0]
+    outputs.solids << @game.bullet_manager.bullets.map do |bullet|
+      { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h, r: 255, g: 255, b: 0 }
     end
   end
 
   def render_enemy_bullets
-    @game.enemy_bullet_manager.bullets.each do |bullet|
-      outputs.solids << [bullet.x, bullet.y, bullet.w, bullet.h, 255, 0, 0]
+    outputs.solids << @game.enemy_bullet_manager.bullets.map do |bullet|
+      { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h, r: 255, g: 0, b: 0 }
     end
   end
 
   def render_enemies
-    outputs.sprites << state.enemies.map { |e| [e.x, e.y, e.w, e.h, e.sprite, e.angle] }
+    outputs.sprites << state.enemies.map { |e| { x: e.x, y: e.y, w: e.w, h: e.h, path: e.sprite, angle: e.angle } }
   end
 
   def render_explosions
     outputs.sprites << state.explosions.map do |e|
       frame = (e.age / 4).to_i % 7  # Cycle through 7 frames (0-6)
-      [
-        e.x - e.width / 2,
-        e.y - e.height / 2,
-        e.width,
-        e.height,
-        "sprites/misc/explosion-#{frame}.png",
-        0,
-        e.opacity,
-        255,
-        128,
-        0
-      ]
+      {
+        x: e.x - e.width / 2,
+        y: e.y - e.height / 2,
+        w: e.width,
+        h: e.height,
+        path: "sprites/misc/explosion-#{frame}.png",
+        angle: 0,
+        a: e.opacity,
+        r: 255,
+        g: 128,
+        b: 0
+      }
     end
   end
 
   def render_powerups
     outputs.sprites << state.powerups.map do |powerup|
-      [powerup.x, powerup.y, powerup.w, powerup.h, powerup.sprite, 0, 255]
+      { x: powerup.x, y: powerup.y, w: powerup.w, h: powerup.h, path: powerup.sprite, angle: 0, a: 255 }
     end
   end
 
@@ -95,9 +95,9 @@ class RenderManager
   end
 
   def render_pause_menu
-    outputs.primitives << [0, 0, state.screen_width, state.screen_height, 0, 0, 0, 128].solid
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2 + 50, "PAUSED", 5, 1, 255, 255, 255]
-    outputs.labels << [state.screen_width / 2, state.screen_height / 2 - 50, "Press 'P' to resume", 2, 1, 255, 255, 255]
+    outputs.primitives << { x: 0, y: 0, w: state.screen_width, h: state.screen_height, r: 0, g: 0, b: 0, a: 128 }.solid
+    outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 + 50, text: "PAUSED", size_enum: 5, alignment_enum: 1, r: 255, g: 255, b: 255 }
+    outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 - 50, text: "Press 'P' to resume", size_enum: 2, alignment_enum: 1, r: 255, g: 255, b: 255 }
   end
 
   def render_debug_information
@@ -124,9 +124,9 @@ class RenderManager
   end
 
   def render_player_health
-    state.current_level.initial_player_health.times do |i|
+    outputs.solids << state.current_level.initial_player_health.times.map do |i|
       color = i < state.player.health ? [255, 0, 0] : [100, 100, 100]
-      outputs.solids << [state.screen_width - 20 - (i * 30), 700, 20, 20, *color]
+      { x: state.screen_width - 20 - (i * 30), y: 700, w: 20, h: 20, r: color[0], g: color[1], b: color[2] }
     end
   end
 
