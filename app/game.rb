@@ -12,7 +12,11 @@ class Game
   def defaults
     # Initialize game state
     state.enemy_types ||= initialize_enemy_types
-    initialize_level
+    state.level_index ||= 0
+    state.levels ||= initialize_levels
+    state.current_level ||= state.levels[state.level_index]
+    state.enemy_spawn_timer ||= state.current_level.enemy_spawn_timer
+    state.powerup_spawn_timer ||= state.current_level.powerup_spawn_timer
     state.player ||= { x: 640, y: 40, w: 50, h: 50, speed: 5, health: state.current_level.initial_player_health, powerups: {} }
     state.shield ||= { x: 0, y: 0, w: 0, h: 0, active: false }
     state.enemies ||= []
@@ -45,6 +49,49 @@ class Game
     increase_difficulty
     check_game_over
     update_level_timer
+  end
+
+  def initialize_enemy_types
+    [
+      { name: :basic, sprite: 'sprites/circle/red.png', health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
+      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
+      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
+    ]
+  end
+
+  def initialize_starfield
+    state.starfield_layers ||= 4
+    state.starfield ||= state.starfield_layers.times.map do |layer|
+      100.times.map do
+        {
+          x: rand(state.screen_width),
+          y: rand(state.screen_height),
+          speed: (layer + 1) * 0.5,
+          size: (layer + 1) * 2,
+          alpha: 255 / (state.starfield_layers - layer)
+        }
+      end
+    end
+  end
+
+  def initialize_levels
+    [
+      Level.new(
+        available_time: 60*60,
+        possible_enemies: state.enemy_types,
+        initial_player_health: 3,
+        possible_powerups: [
+          { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
+          { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
+          { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
+          { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
+          { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
+        ],
+        max_waves: 3,
+        powerup_spawn_timer: 600,
+        enemy_spawn_timer: 60
+      )
+    ]
   end
 
   def audio_manager
@@ -291,55 +338,11 @@ class Game
     end
   end
 
-  def initialize_enemy_types
-    [
-      { name: :basic, sprite: 'sprites/circle/red.png', health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
-      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
-      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
-    ]
-  end
-
-  def initialize_starfield
-    state.starfield_layers ||= 4
-    state.starfield ||= state.starfield_layers.times.map do |layer|
-      100.times.map do
-        {
-          x: rand(state.screen_width),
-          y: rand(state.screen_height),
-          speed: (layer + 1) * 0.5,
-          size: (layer + 1) * 2,
-          alpha: 255 / (state.starfield_layers - layer)
-        }
-      end
-    end
-  end
-
-  def initialize_level
-    state.current_level ||= Level.new(
-      available_time: 60*60,
-      possible_enemies: state.enemy_types,
-      initial_player_health: 3,
-      possible_powerups: [
-        { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
-        { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
-        { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
-        { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
-        { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
-      ],
-      max_waves: 3,
-      powerup_spawn_timer: 600,
-      enemy_spawn_timer: 60
-    )
-    state.enemy_spawn_timer ||= state.current_level.enemy_spawn_timer
-    state.powerup_spawn_timer ||= state.current_level.powerup_spawn_timer
-  end
-
   def update_level_timer
     state.current_level.time_remaining -= 1 if state.current_level.time_remaining > 0
   end
 
   def restart_game
-    initialize_level
     state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: state.current_level.initial_player_health, powerups: {} }
     bullet_manager.bullets = []
     enemy_bullet_manager.bullets = []
