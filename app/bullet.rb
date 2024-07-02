@@ -1,13 +1,14 @@
 class Bullet
   attr_accessor :x, :y, :w, :h, :speed, :angle
 
-  def initialize(x, y, w, h, speed, angle)
+  def initialize(x, y, w, h, speed, angle, color: [255, 255, 0])
     @x = x
     @y = y
     @w = w
     @h = h
     @speed = speed
     @angle = angle
+    @color = color
   end
 
   def update
@@ -17,6 +18,10 @@ class Bullet
   def move
     @x += Math.cos(@angle * Math::PI / 180) * @speed
     @y += Math.sin(@angle * Math::PI / 180) * @speed
+  end
+
+  def render
+    { x: @x, y: @y, w: @w, h: @h, r: @color[0], g: @color[1], b: @color[2] }
   end
 
   def off_screen?(screen_width, screen_height)

@@ -45,15 +45,11 @@ class RenderManager
   end
 
   def render_bullets
-    outputs.solids << @game.bullet_manager.bullets.map do |bullet|
-      { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h, r: 255, g: 255, b: 0 }
-    end
+    outputs.solids << @game.bullet_manager.bullets.map(&:render)
   end
 
   def render_enemy_bullets
-    outputs.solids << @game.enemy_bullet_manager.bullets.map do |bullet|
-      { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h, r: 255, g: 0, b: 0 }
-    end
+    outputs.solids << @game.enemy_bullet_manager.bullets.map(&:render)
   end
 
   def render_enemies
