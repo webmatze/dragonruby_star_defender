@@ -25,53 +25,14 @@ class InputHandler
       return
     end
 
-    # Pause/Unpause
-    if inputs.keyboard.key_down.p
-      @game.audio_manager.play_background_music if state.paused
-      state.paused = !state.paused
-      @game.audio_manager.stop_background_music if state.paused
-    end
-
+    handle_pause_input(inputs.keyboard.key_down.p)
     return if state.paused
 
-    # Speed powerup
-    if state.player.powerups.include?(:speed)
-      state.player.speed = 5 + (state.player.powerups[:speed][:level] * 2)
-    else
-      state.player.speed = 5
-    end
-
-    # Player movement
-    state.player.x -= state.player.speed if inputs.keyboard.key_held.left
-    state.player.x += state.player.speed if inputs.keyboard.key_held.right
-    state.player.y -= state.player.speed if inputs.keyboard.key_held.down
-    state.player.y += state.player.speed if inputs.keyboard.key_held.up
-
-    # Keep player within screen bounds
-    state.player.x = state.player.x.clamp(0, state.screen_width - state.player.w)
-    state.player.y = state.player.y.clamp(0, state.screen_height - state.player.h)
-
-    # Shooting
-    if inputs.keyboard.key_down.space
-      @game.fire_player_bullets
-    end
-
-    # Volume control
-    if inputs.keyboard.key_down.plus || inputs.keyboard.key_down.equal_sign
-      @game.audio_manager.increase_volume
-    end
-    if inputs.keyboard.key_down.minus || inputs.keyboard.key_down.underscore
-      @game.audio_manager.decrease_volume
-    end
-
-    # Mute/unmute
-    if inputs.keyboard.key_down.m
-      if @game.audio_manager.muted?
-        @game.audio_manager.unmute
-      else
-        @game.audio_manager.mute
-      end
-    end
+    handle_player_movement(inputs.keyboard)
+    handle_player_shooting(inputs.keyboard.key_down.space)
+    handle_increase_volume(inputs.keyboard.key_down.plus)
+    handle_decrease_volume(inputs.keyboard.key_down.minus)
+    handle_mute_toggle(inputs.keyboard.key_down.m)
   end
 
   def handle_mouse_input
@@ -93,47 +54,49 @@ class InputHandler
       return
     end
 
-    # Pause/Unpause
-    if inputs.controller_one.key_down.start
+    handle_pause_input(inputs.controller_one.key_down.start)
+    return if state.paused
+
+    handle_player_movement(inputs.controller_one)
+    handle_player_shooting(inputs.controller_one.key_down.a)
+    handle_increase_volume(inputs.controller_one.key_down.r1)
+    handle_decrease_volume(inputs.controller_one.key_down.l1)
+    handle_mute_toggle(inputs.controller_one.key_down.select)
+  end
+
+  def handle_pause_input(pause_key)
+    if pause_key
       @game.audio_manager.play_background_music if state.paused
       state.paused = !state.paused
       @game.audio_manager.stop_background_music if state.paused
     end
+  end
 
-    return if state.paused
-
-    # Speed powerup
-    if state.player.powerups.include?(:speed)
-      state.player.speed = 5 + (state.player.powerups[:speed][:level] * 2)
-    else
-      state.player.speed = 5
-    end
-
-    # Player movement
-    state.player.x -= state.player.speed if inputs.controller_one.left
-    state.player.x += state.player.speed if inputs.controller_one.right
-    state.player.y -= state.player.speed if inputs.controller_one.down
-    state.player.y += state.player.speed if inputs.controller_one.up
+  def handle_player_movement(input_source)
+    state.player.x -= state.player.speed if input_source.left
+    state.player.x += state.player.speed if input_source.right
+    state.player.y -= state.player.speed if input_source.down
+    state.player.y += state.player.speed if input_source.up
 
     # Keep player within screen bounds
     state.player.x = state.player.x.clamp(0, state.screen_width - state.player.w)
     state.player.y = state.player.y.clamp(0, state.screen_height - state.player.h)
+  end
 
-    # Shooting
-    if inputs.controller_one.key_down.a
-      @game.fire_player_bullets
-    end
+  def handle_player_shooting(shoot_key)
+    @game.fire_player_bullets if shoot_key
+  end
 
-    # Volume control
-    if inputs.controller_one.key_down.r1
-      @game.audio_manager.increase_volume
-    end
-    if inputs.controller_one.key_down.l1
-      @game.audio_manager.decrease_volume
-    end
+  def handle_increase_volume(increase_key)
+    @game.audio_manager.increase_volume if increase_key
+  end
 
-    # Mute/unmute
-    if inputs.controller_one.key_down.select
+  def handle_decrease_volume(decrease_key)
+    @game.audio_manager.decrease_volume if decrease_key
+  end
+
+  def handle_mute_toggle(mute_key)
+    if mute_key
       if @game.audio_manager.muted?
         @game.audio_manager.unmute
       else

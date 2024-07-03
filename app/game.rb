@@ -48,6 +48,7 @@ class Game
     check_player_powerup_collisions
     increase_difficulty
     check_game_over
+    update_player_speed
     update_level_timer
   end
 
@@ -340,6 +341,14 @@ class Game
 
   def update_level_timer
     state.current_level.time_remaining -= 1 if state.current_level.time_remaining > 0
+  end
+
+  def update_player_speed
+    if state.player.powerups.include?(:speed)
+      state.player.speed = 5 + (state.player.powerups[:speed][:level] * 2)
+    else
+      state.player.speed = 5
+    end
   end
 
   def restart_game
