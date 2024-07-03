@@ -291,11 +291,9 @@ class Game
     state.player.powerups.reject! { |_, powerup| powerup[:health] <= 0 }
   end
 
-  def fire_player_bullets
+  def fire_primary_weapon
     active_weapon = state.player.powerups.values.max_by { |p| p[:priority] }
     case active_weapon&.[](:type)
-    when :seeking
-      bullet_manager.create_bullet(:seeking, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
     when :multi_shot
       angles = case active_weapon[:level]
                when 1 then [-30, 0, 30]
@@ -309,6 +307,13 @@ class Game
       bullet_manager.create_bullet(:straight, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
     end
     audio_manager.player_shoot
+  end
+
+  def fire_secondary_weapon
+    if state.player.powerups.include?(:seeking)
+      bullet_manager.create_bullet(:seeking, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90, nil, color: [0, 255, 0])
+      audio_manager.player_shoot
+    end
   end
 
   def update_explosions

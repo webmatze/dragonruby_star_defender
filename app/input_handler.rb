@@ -29,7 +29,8 @@ class InputHandler
     return if state.paused
 
     handle_player_movement(inputs.keyboard)
-    handle_player_shooting(inputs.keyboard.key_down.space)
+    handle_primary_weapon_shooting(inputs.keyboard.key_down.space)
+    handle_secondary_weapon_shooting(inputs.keyboard.key_down.ctrl)
     handle_increase_volume(inputs.keyboard.key_down.plus)
     handle_decrease_volume(inputs.keyboard.key_down.minus)
     handle_mute_toggle(inputs.keyboard.key_down.m)
@@ -58,7 +59,8 @@ class InputHandler
     return if state.paused
 
     handle_player_movement(inputs.controller_one)
-    handle_player_shooting(inputs.controller_one.key_down.a)
+    handle_primary_weapon_shooting(inputs.controller_one.key_down.a)
+    handle_secondary_weapon_shooting(inputs.controller_one.key_down.b)
     handle_increase_volume(inputs.controller_one.key_down.r1)
     handle_decrease_volume(inputs.controller_one.key_down.l1)
     handle_mute_toggle(inputs.controller_one.key_down.select)
@@ -83,8 +85,12 @@ class InputHandler
     state.player.y = state.player.y.clamp(0, state.screen_height - state.player.h)
   end
 
-  def handle_player_shooting(shoot_key)
-    @game.fire_player_bullets if shoot_key
+  def handle_primary_weapon_shooting(shoot_key)
+    @game.fire_primary_weapon if shoot_key
+  end
+
+  def handle_secondary_weapon_shooting(shoot_key)
+    @game.fire_secondary_weapon if shoot_key
   end
 
   def handle_increase_volume(increase_key)
