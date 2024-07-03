@@ -42,8 +42,8 @@ class AngledBullet < Bullet
 end
 
 class SeekingBullet < Bullet
-  def initialize(x, y, w, h, speed, angle, target)
-    super(x, y, w, h, speed, angle)
+  def initialize(x, y, w, h, speed, angle, target, color: [255, 255, 0])
+    super(x, y, w, h, speed, angle, color: color)
     @target = target
     @turn_speed = 2 # Adjust as needed
   end
