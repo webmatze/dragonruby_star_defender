@@ -352,6 +352,7 @@ class Game
     state.score = 0
     state.explosions = []
     state.game_over = false
+    state.current_level.time_remaining = state.current_level.available_time
     audio_manager.play_background_music
   end
 end
