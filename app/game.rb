@@ -12,6 +12,7 @@ class Game
   def defaults
     # Initialize game state
     state.enemy_types ||= initialize_enemy_types
+    state.powerup_types ||= initialize_powerup_types
     state.level_index ||= 0
     state.levels ||= initialize_levels
     state.current_level ||= state.levels[state.level_index]
@@ -60,6 +61,16 @@ class Game
     ]
   end
 
+  def initialize_powerup_types
+    [
+          { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
+          { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
+          { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
+          { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
+          { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
+    ]
+  end
+
   def initialize_starfield
     state.starfield_layers ||= 4
     state.starfield ||= state.starfield_layers.times.map do |layer|
@@ -79,20 +90,22 @@ class Game
     [
       Level.new(
         available_time: 60*60,
-        possible_enemies: state.enemy_types,
+        possible_enemies: select_enemies([:basic, :tough]),
         initial_player_health: 3,
-        possible_powerups: [
-          { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
-          { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
-          { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
-          { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
-          { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
-        ],
+        possible_powerups: select_powerups([:multi_shot, :health, :speed]),
         max_waves: 3,
         powerup_spawn_timer: 600,
         enemy_spawn_timer: 60
       )
     ]
+  end
+
+  def select_powerups(powerup_types)
+    state.powerup_types.select { |powerup| powerup_types.include?(powerup[:type]) }
+  end
+
+  def select_enemies(enemy_types)
+    state.enemy_types.select { |enemy| enemy_types.include?(enemy[:name]) }
   end
 
   def audio_manager
