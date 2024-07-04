@@ -5,7 +5,7 @@ class RenderManager
 
   def render
     # Set background to black
-    outputs.solids << { x: 0, y: 0, w: state.screen_width, h: state.screen_height, r: 0, g: 0, b: 0 }
+    outputs.background_color = [ 0, 0, 0 ]
     render_starfield
     unless state.game_over
       render_player
@@ -98,7 +98,7 @@ class RenderManager
   end
 
   def render_pause_menu
-    outputs.primitives << { x: 0, y: 0, w: state.screen_width, h: state.screen_height, r: 0, g: 0, b: 0, a: 128 }.solid
+    outputs.primitives << { x: 0, y: 0, w: state.screen_width, h: state.screen_height, r: 0, g: 0, b: 0, a: 128 }.to_solid
     outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 + 50, text: "PAUSED", size_enum: 5, alignment_enum: 1, r: 255, g: 255, b: 255 }
     outputs.labels << { x: state.screen_width / 2, y: state.screen_height / 2 - 50, text: "Press 'P' to resume", size_enum: 2, alignment_enum: 1, r: 255, g: 255, b: 255 }
   end
