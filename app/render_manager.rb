@@ -34,7 +34,14 @@ class RenderManager
   end
 
   def render_player
-    outputs.sprites << { x: state.player.x, y: state.player.y, w: state.player.w, h: state.player.h, path: 'sprites/ship/space ship-2.png' }
+    index = Numeric.frame_index count: 2, hold_for: 8, repeat_index: 0, repeat: true
+    outputs.sprites << {
+      x: state.player.x,
+      y: state.player.y,
+      w: state.player.w,
+      h: state.player.h,
+      path: "sprites/ship/red/sprite_#{index}.png"
+    }
 
     if state.player.powerups.include?(:shield)
       shield_size = [state.player.w, state.player.h].max * 1.8
@@ -99,6 +106,7 @@ class RenderManager
   def render_debug_information
     outputs.debug << "current tick: #{Kernel.tick_count}"
     outputs.debug << "FPS: #{@game.args.gtk.current_framerate}"
+    outputs.debug << "Player position: #{state.player.x}, #{state.player.y}"
   end
 
   def render_powerup_inventory
