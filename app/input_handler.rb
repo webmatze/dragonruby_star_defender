@@ -29,7 +29,7 @@ class InputHandler
     return if state.paused
 
     handle_player_movement(inputs.keyboard)
-    handle_primary_weapon_shooting(inputs.keyboard.key_down.space)
+    handle_primary_weapon_shooting(inputs.keyboard.key_held.space)
     handle_secondary_weapon_shooting(inputs.keyboard.key_down.ctrl)
     handle_increase_volume(inputs.keyboard.key_down.plus)
     handle_decrease_volume(inputs.keyboard.key_down.minus)
@@ -59,7 +59,7 @@ class InputHandler
     return if state.paused
 
     handle_player_movement(inputs.controller_one)
-    handle_primary_weapon_shooting(inputs.controller_one.key_down.a)
+    handle_primary_weapon_shooting(inputs.controller_one.key_held.a)
     handle_secondary_weapon_shooting(inputs.controller_one.key_down.b)
     handle_increase_volume(inputs.controller_one.key_down.r1)
     handle_decrease_volume(inputs.controller_one.key_down.l1)

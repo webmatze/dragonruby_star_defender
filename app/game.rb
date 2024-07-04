@@ -28,6 +28,7 @@ class Game
     state.screen_width ||= 1280
     state.screen_height ||= 720
     state.game_over ||= false
+    state.primary_weapon_cooldown ||= 0
     initialize_starfield
   end
 
@@ -51,6 +52,7 @@ class Game
     check_game_over
     update_player_speed
     update_level_timer
+    update_primary_weapon_cooldown
   end
 
   def initialize_enemy_types
@@ -305,6 +307,8 @@ class Game
   end
 
   def fire_primary_weapon
+    return if state.primary_weapon_cooldown > 0
+
     active_weapon = state.player.powerups.values.max_by { |p| p[:priority] }
     case active_weapon&.[](:type)
     when :multi_shot
@@ -320,6 +324,7 @@ class Game
       bullet_manager.create_bullet(:straight, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
     end
     audio_manager.player_shoot
+    state.primary_weapon_cooldown = 24
   end
 
   def fire_secondary_weapon
@@ -369,6 +374,10 @@ class Game
     end
   end
 
+  def update_primary_weapon_cooldown
+    state.primary_weapon_cooldown -= 1 if state.primary_weapon_cooldown > 0
+  end
+
   def restart_game
     state.player = { x: 640, y: 40, w: 50, h: 50, speed: 5, health: state.current_level.initial_player_health, powerups: {} }
     bullet_manager.bullets = []
@@ -380,6 +389,7 @@ class Game
     state.explosions = []
     state.game_over = false
     state.current_level.time_remaining = state.current_level.available_time
+    state.primary_weapon_cooldown = 0
     audio_manager.play_background_music
   end
 end
