@@ -324,7 +324,13 @@ class Game
       bullet_manager.create_bullet(:straight, state.player.x + state.player.w / 2, state.player.y + state.player.h, 90)
     end
     audio_manager.player_shoot
-    state.primary_weapon_cooldown = 24
+
+    if state.player.powerups[:multi_shot]
+      multi_shot_health = state.player.powerups[:multi_shot][:health]
+      state.primary_weapon_cooldown = 24 - (multi_shot_health * 2)
+    else
+      state.primary_weapon_cooldown = 24
+    end
   end
 
   def fire_secondary_weapon
