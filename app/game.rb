@@ -91,13 +91,14 @@ class Game
   def initialize_levels
     [
       Level.new(
-        available_time: 60*60,
+        available_time: 60*60*5, # 5 minutes
         possible_enemies: select_enemies([:basic, :tough]),
         initial_player_health: 3,
         possible_powerups: select_powerups([:multi_shot, :health, :speed]),
         max_waves: 3,
         powerup_spawn_timer: 600,
-        enemy_spawn_timer: 60
+        enemy_spawn_timer: 60,
+        minimum_points_to_spawn_powerup: 2500
       )
     ]
   end
@@ -176,6 +177,8 @@ class Game
   end
 
   def spawn_powerup
+    return unless state.score >= state.current_level.minimum_points_to_spawn_powerup
+
     powerup = state.current_level.possible_powerups.sample
     state.powerups << {
       x: rand(state.screen_width),
