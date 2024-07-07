@@ -163,7 +163,7 @@ class Game
 
   def spawn_enemy
     enemy_type = state.current_level.possible_enemies.sample
-    spawn_width = [state.screen_width / 3 * (state.wave / 5.0), state.screen_width].min
+    spawn_width = [state.screen_width / 3 * (state.wave / 3.0), state.screen_width].min
     spawn_x = (state.screen_width - spawn_width) / 2 + rand(spawn_width)
     state.enemies << Enemy.new(spawn_x, state.screen_height, enemy_type)
   end
