@@ -60,7 +60,7 @@ class RenderManager
   end
 
   def render_enemies
-    outputs.sprites << state.enemies.map { |e| { x: e.x, y: e.y, w: e.w, h: e.h, path: e.sprite, angle: e.angle } }
+    outputs.sprites << state.enemies.map(&:to_h)
   end
 
   def render_explosions

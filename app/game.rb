@@ -57,9 +57,9 @@ class Game
 
   def initialize_enemy_types
     [
-      { name: :basic, sprite: 'sprites/circle/red.png', health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
-      { name: :tough, sprite: 'sprites/circle/blue.png', health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
-      { name: :fast, sprite: 'sprites/circle/green.png', health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
+      { name: :basic, sprites: ['sprites/circle/red.png'], health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
+      { name: :tough, sprites: ['sprites/enemy-1/sprite_0.png', 'sprites/enemy-1/sprite_1.png', 'sprites/enemy-1/sprite_2.png', 'sprites/enemy-1/sprite_3.png'], health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
+      { name: :fast, sprites: ['sprites/circle/green.png'], health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
     ]
   end
 
