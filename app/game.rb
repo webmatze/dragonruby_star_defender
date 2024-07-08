@@ -58,18 +58,18 @@ class Game
   def initialize_enemy_types
     [
       { name: :basic, sprites: ['sprites/circle/red.png'], health: 2, speed: 2, score_value: 300, angle: -90, shoot_rate: 300 },
-      { name: :tough, sprites: ['sprites/enemy-1/sprite_0.png', 'sprites/enemy-1/sprite_1.png', 'sprites/enemy-1/sprite_2.png', 'sprites/enemy-1/sprite_3.png'], health: 3, speed: 1, score_value: 200, angle: -90, shoot_rate: 600 },
+      { name: :tough, sprites: ['sprites/enemy-1/sprite_0.png', 'sprites/enemy-1/sprite_1.png', 'sprites/enemy-1/sprite_2.png', 'sprites/enemy-1/sprite_3.png'], health: 3, speed: 1.5, score_value: 200, angle: -90, shoot_rate: 600 },
       { name: :fast, sprites: ['sprites/circle/green.png'], health: 1, speed: 4, score_value: 100, angle: -90, shoot_rate: 0 }
     ]
   end
 
   def initialize_powerup_types
     [
-          { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
-          { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
-          { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
-          { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
-          { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
+      { type: :multi_shot, sprite: 'sprites/powerups/powerups-2.png', max_level: 3, priority: 2 },
+      { type: :health, sprite: 'sprites/powerups/powerups-4.png', max_level: 1, priority: 0 },
+      { type: :speed, sprite: 'sprites/powerups/powerups-3.png', max_level: 3, priority: 1 },
+      { type: :shield, sprite: 'sprites/powerups/powerups-1.png', max_level: 2, priority: 3 },
+      { type: :seeking, sprite: 'sprites/hexagon/indigo.png', max_level: 2, priority: 4 }
     ]
   end
 

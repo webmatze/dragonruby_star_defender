@@ -62,7 +62,7 @@ class Enemy
 
   def move_tough
     @y -= @speed
-    @x += Math.sin(ticks_elapsed * 0.1) * 2
+    @x += Math.sin(ticks_elapsed * 0.02) * 2
   end
 
   def move_fast
@@ -76,7 +76,7 @@ class Enemy
   end
 
   def fire_bullet
-    $game.enemy_bullet_manager.create_bullet(:straight, @x + @w / 2, @y, 270, color: [255, 0, 0])
+    $game.enemy_bullet_manager.create_bullet(:straight, @x + @w / 2, @y, 270, speed: 5, color: [255, 0, 0])
     @last_shot_time = $game.state.tick_count
   end
 end

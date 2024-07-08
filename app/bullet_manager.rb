@@ -6,15 +6,15 @@ class BulletManager
     @bullets = []
   end
 
-  def create_bullet(type, x, y, angle, target = nil, color: [255, 255, 0])
+  def create_bullet(type, x, y, angle, target = nil, speed: 10, color: [255, 255, 0])
     bullet = case type
              when :straight
-               StraightBullet.new(x, y, 5, 10, 10, angle, color: color)
+               StraightBullet.new(x, y, 5, 10, speed, angle, color: color)
              when :angled
-               AngledBullet.new(x, y, 5, 10, 10, angle, color: color)
+               AngledBullet.new(x, y, 5, 10, speed, angle, color: color)
              when :seeking
                speed = 5 + (@game.state.player.powerups[:seeking][:level] * 3)
-               SeekingBullet.new(x, y, speed, 10, 5, angle, target, color: color)
+               SeekingBullet.new(x, y, 5, 10, speed, angle, target, color: color)
              end
     @bullets << bullet
   end
